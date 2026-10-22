@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OriiriiSpace</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: #0a0a0a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { width: 100%; max-width: 400px; padding: 20px; text-align: center; }
+        .logo { font-size: 40px; font-weight: bold; color: #A855F7; margin-bottom: 10px; }
+        .subtitle { font-size: 16px; margin-bottom: 30px; color: #aaa; }
+        input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #1f1f1f; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; border-radius: 8px; border: none; background: #A855F7; color: white; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .switch { margin-top: 20px; color: #A855F7; cursor: pointer; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">OriiriiSpace</div>
+        <div class="subtitle" id="subtitle">Create an Account</div>
+        
+        <div id="signup-fields">
+            <input type="text" id="fullname" placeholder="Full Name">
+            <input type="text" id="username" placeholder="Username">
+        </div>
+        
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="password" placeholder="Password">
+        
+        <button onclick="handleAuth()" id="auth-btn">Sign Up</button>
+        
+        <div class="switch" onclick="toggleMode()" id="switch-text">Already have an account? Log In</div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://inumwcrosrbavpjxybzb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludW13Y3Jvc3JiYXZwanh5YnpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2Mjc5NzEsImV4cCI6MjEwODIwMzk3MX0.OJnHGVre0PMEAKP9KM75BXMSnaTvkinY18cK6JaFSpE';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let isLogin = false;
+
+        function toggleMode() {
+            isLogin = !isLogin;
+            document.getElementById('subtitle').innerText = isLogin ? "Welcome Back" : "Create an Account";
+            document.getElementById('auth-btn').innerText = isLogin ? "Log In" : "Sign Up";
+            document.getElementById('switch-text').innerText = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In";
+            document.getElementById('signup-fields').style.display = isLogin ? "none" : "block";
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if(!email || !password) {
+                alert("Please enter email and password");
+                return;
+            }
+
+            document.getElementById('auth-btn').innerText = "Loading...";
+
+            if (isLogin) {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) alert("Login Error: " + error.message);
+                else alert("Logged in successfully!");
+            } else {
+                const fullName = document.getElementById('fullname').value;
+                const username = document.getElementById('username').value;
+                
+                if(!fullName || !username) {
+                    alert("Please fill all fields");
+                    document.getElementById('auth-btn').innerText = "Sign Up";
+                    return;
+                }
+
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { data: { full_name: fullName, username: username.toLowerCase() } }
+                });
+                if (error) alert("Signup Error: " + error.message);
+                else alert("Account created! Check your email to verify.");
+            }
+            
+            document.getElementById('auth-btn').innerText = isLogin ? "Log In" : "Sign Up";
+        }
+    </script>
+</body>
+</html>
