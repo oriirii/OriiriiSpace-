@@ -6,13 +6,16 @@
     <title>OriiriiSpace</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background-color: #0a0a0a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { width: 100%; max-width: 400px; padding: 20px; text-align: center; }
+        body { background-color: #0a0a0a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .container { width: 100%; max-width: 400px; text-align: center; }
         .logo { font-size: 40px; font-weight: bold; color: #A855F7; margin-bottom: 10px; }
-        .subtitle { font-size: 16px; margin-bottom: 30px; color: #aaa; }
-        input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #1f1f1f; color: white; box-sizing: border-box; }
+        .subtitle { font-size: 16px; margin-bottom: 20px; color: #aaa; }
+        input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #333; background: #1f1f1f; color: white; box-sizing: border-box; font-size: 16px; }
         button { width: 100%; padding: 15px; border-radius: 8px; border: none; background: #A855F7; color: white; font-size: 18px; font-weight: bold; cursor: pointer; }
         .switch { margin-top: 20px; color: #A855F7; cursor: pointer; font-size: 14px; }
+        #message-box { margin-top: 20px; padding: 10px; border-radius: 8px; font-weight: bold; display: none; word-wrap: break-word; }
+        .error { background-color: #ff4d4d; color: white; }
+        .success { background-color: #4dff88; color: black; }
     </style>
 </head>
 <body>
@@ -20,6 +23,8 @@
         <div class="logo">OriiriiSpace</div>
         <div class="subtitle" id="subtitle">Create an Account</div>
         
+        <div id="message-box"></div>
+
         <div id="signup-fields">
             <input type="text" id="fullname" placeholder="Full Name">
             <input type="text" id="username" placeholder="Username">
@@ -40,8 +45,16 @@
 
         let isLogin = false;
 
+        function showMessage(text, type) {
+            const box = document.getElementById('message-box');
+            box.style.display = 'block';
+            box.className = type;
+            box.innerText = text;
+        }
+
         function toggleMode() {
             isLogin = !isLogin;
+            document.getElementById('message-box').style.display = 'none'; // hide message on switch
             document.getElementById('subtitle').innerText = isLogin ? "Welcome Back" : "Create an Account";
             document.getElementById('auth-btn').innerText = isLogin ? "Log In" : "Sign Up";
             document.getElementById('switch-text').innerText = isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In";
@@ -49,26 +62,27 @@
         }
 
         async function handleAuth() {
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             
             if(!email || !password) {
-                alert("Please enter email and password");
+                showMessage("Please enter email and password", "error");
                 return;
             }
 
             document.getElementById('auth-btn').innerText = "Loading...";
+            document.getElementById('message-box').style.display = 'none';
 
             if (isLogin) {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) alert("Login Error: " + error.message);
-                else alert("Logged in successfully!");
+                if (error) showMessage("Login Error: " + error.message, "error");
+                else showMessage("Logged in successfully!", "success");
             } else {
-                const fullName = document.getElementById('fullname').value;
-                const username = document.getElementById('username').value;
+                const fullName = document.getElementById('fullname').value.trim();
+                const username = document.getElementById('username').value.trim();
                 
                 if(!fullName || !username) {
-                    alert("Please fill all fields");
+                    showMessage("Please fill all fields", "error");
                     document.getElementById('auth-btn').innerText = "Sign Up";
                     return;
                 }
@@ -78,8 +92,12 @@
                     password,
                     options: { data: { full_name: fullName, username: username.toLowerCase() } }
                 });
-                if (error) alert("Signup Error: " + error.message);
-                else alert("Account created! Check your email to verify.");
+                
+                if (error) {
+                    showMessage("Signup Error: " + error.message, "error");
+                } else {
+                    showMessage("Account created successfully! Check your email to verify.", "success");
+                }
             }
             
             document.getElementById('auth-btn').innerText = isLogin ? "Log In" : "Sign Up";
